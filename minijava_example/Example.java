@@ -22,7 +22,7 @@ class Base {
 }
 
 class Derived extends Base {
-	public int set(int x) {
+	public int set(int x, int a) {
 		data = x * 2;
 		return data;
 	}

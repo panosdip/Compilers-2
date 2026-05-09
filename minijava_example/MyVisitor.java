@@ -22,10 +22,12 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
 
     class Variable{
         String name;
+        String type;
         int size;
 
-        public Variable(String name, int size){
+        public Variable(String name, String type, int size){
             this.name = name;
+            this.type = type;
             this.size = size;
         }
     }
@@ -34,7 +36,7 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
         String name;
         int size;
 
-        ArrayList<String> params;
+        ArrayList<Variable> params;
 
         public Method(String name, int size){
             this.name = name;
@@ -183,7 +185,7 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
         String classname = info.name;
         int offset = info.fieldOffset;
 
-        Variable varInfo = new Variable(var, varSize);
+        Variable varInfo = new Variable(var, type, varSize);
 
 
         System.out.println(classname + "." + varInfo.name + " " + offset);
@@ -213,7 +215,6 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
      */
     @Override
     public String visit(MethodDeclaration n, ClassInfo info) throws Exception {
-        String argumentList = n.f4.present() ? n.f4.accept(this, null) : "";
 
         String type = n.f1.accept(this, null);
         String name = n.f2.accept(this, null);
@@ -224,9 +225,34 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
         int offset = info.methodOffset;
 
         Method methodInfo = new Method(name, methodSize);
+        
+
+        // Get arguments in String format.
+        String argumentList = n.f4.present() ? n.f4.accept(this, info) : "";
+
+
+        // Split the arguments list into <type> <name>, create variable and push it to the list.
+        String[] declarations = argumentList.split("\\s*,\\s*");
+
+        for (String decl : declarations) {
+            String[] parts = decl.trim().split("\\s+");
+            
+            if(parts.length == 2){
+                type = parts[0];
+                name = parts[1];
+                int size = typeSizes.getOrDefault(type, 8);
+
+                // System.out.println("Type: " + type);
+                // System.out.println("Name: " + name);
+
+                Variable param = new Variable(name, type, size);
+
+                
+                methodInfo.params.add(param);
+            }
+        }
 
         System.out.println(classname + "." + name + " " + offset);
-        System.out.println(argumentList);
 
         info.methodOffset += methodSize;
 
@@ -240,7 +266,7 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
      * f1 -> FormalParameterTail()
      */
     @Override
-    public String visit(FormalParameterList n, ClassInfo argu) throws Exception {
+    public String visit(FormalParameterList n, ClassInfo info) throws Exception {
         String ret = n.f0.accept(this, null);
 
         if (n.f1 != null) {
