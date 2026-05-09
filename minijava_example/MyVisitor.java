@@ -2,19 +2,68 @@ import syntaxtree.*;
 import visitor.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
 
 
 
-class MyVisitor extends GJDepthFirst<String, String>{
+class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
+
+    Map<String, ClassInfo> symbolTable;
 
     Map<String, Integer> typeSizes;
 
     public MyVisitor() {
+        symbolTable = new HashMap<>();
         typeSizes = new HashMap<>();
 
         typeSizes.put("int", 4);
         typeSizes.put("boolean", 1);
     }
+
+    class Variable{
+        String name;
+        int size;
+
+        public Variable(String name, int size){
+            this.name = name;
+            this.size = size;
+        }
+    }
+
+    class Method{
+        String name;
+        int size;
+
+        ArrayList<String> params;
+
+        public Method(String name, int size){
+            this.name = name;
+            this.size = size;
+
+            this.params = new ArrayList<>();
+        }
+    }
+
+    class ClassInfo{
+    String name;
+    String parent;
+
+    Map<String, Variable> fields;
+    Map<String, Method> methods;
+
+    int fieldOffset;
+    int methodOffset;
+
+    public ClassInfo(String className, String parentName, int fieldOffset, int methodOffset){
+        this.name = className;
+        this.parent = parentName;
+        this.fieldOffset = fieldOffset;
+        this.methodOffset = methodOffset;
+
+        fields = new HashMap<>();
+        methods = new HashMap<>();
+    }
+}
 
     /**
      * f0 -> "class"
@@ -37,13 +86,16 @@ class MyVisitor extends GJDepthFirst<String, String>{
      * f17 -> "}"
      */
     @Override
-    public String visit(MainClass n, String argu) throws Exception {
+    public String visit(MainClass n, ClassInfo argu) throws Exception {
         String classname = n.f1.accept(this, null);
-        System.out.println("Class: " + classname);
+        // System.out.println("Class: " + classname);
 
-        super.visit(n, argu);
+        // ClassInfo info = new ClassInfo(classname, null, 0, 0);
+        // symbolTable.put(classname, info);
 
-        System.out.println();
+        // super.visit(n, info);
+
+        // System.out.println();
 
         return null;
     }
@@ -57,17 +109,21 @@ class MyVisitor extends GJDepthFirst<String, String>{
      * f5 -> "}"
      */
     @Override
-    public String visit(ClassDeclaration n, String argu) throws Exception {
+    public String visit(ClassDeclaration n, ClassInfo argu) throws Exception {
         n.f0.accept(this, argu);
         
         String classname = n.f1.accept(this, argu);
         System.out.println("Class: " + classname);
 
+        
+        ClassInfo info = new ClassInfo(classname, null, 0, 0);
+        symbolTable.put(classname, info);
+
         n.f2.accept(this, argu);
         System.out.println("Variables: ");
-        n.f3.accept(this, classname);
+        n.f3.accept(this, info);
         System.out.println("Methods: ");
-        n.f4.accept(this, classname);
+        n.f4.accept(this, info);
         n.f5.accept(this, argu);
 
         System.out.println();
@@ -86,19 +142,25 @@ class MyVisitor extends GJDepthFirst<String, String>{
      * f7 -> "}"
      */
     @Override
-    public String visit(ClassExtendsDeclaration n, String argu) throws Exception {
+    public String visit(ClassExtendsDeclaration n, ClassInfo argu) throws Exception {
         n.f0.accept(this, argu);
 
         String classname = n.f1.accept(this, null);
         System.out.println("Class: " + classname);
 
+        String parentname = n.f3.accept(this, null);
+
+        ClassInfo info = new ClassInfo(classname, parentname, 0, 0);
+
+        symbolTable.put(classname, info);
+
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
         n.f4.accept(this, argu);
         System.out.println("Variables: ");
-        n.f5.accept(this, classname);
+        n.f5.accept(this, info);
         System.out.println("Methods: ");
-        n.f6.accept(this, classname);
+        n.f6.accept(this, info);
         n.f7.accept(this, argu);
 
         System.out.println();
@@ -111,15 +173,25 @@ class MyVisitor extends GJDepthFirst<String, String>{
     * f1 -> Identifier()
     * f2 -> ";"
     */
-   public String visit(VarDeclaration n, String classname) throws Exception {
+   public String visit(VarDeclaration n, ClassInfo info) throws Exception {
         String _ret=null;
         String type = n.f0.accept(this, null);
         String var = n.f1.accept(this, null);
 
-        int offset = typeSizes.getOrDefault(type, 8);
+        int varSize = typeSizes.getOrDefault(type, 8);
 
-        System.out.println(classname + "." + var + " " + offset);
-        super.visit(n, classname);
+        String classname = info.name;
+        int offset = info.fieldOffset;
+
+        Variable varInfo = new Variable(var, varSize);
+
+
+        System.out.println(classname + "." + varInfo.name + " " + offset);
+
+        info.fieldOffset += varInfo.size;
+
+        info.fields.put(var, varInfo);
+        // super.visit(info);
         
         return _ret;
     }
@@ -140,16 +212,24 @@ class MyVisitor extends GJDepthFirst<String, String>{
      * f12 -> "}"
      */
     @Override
-    public String visit(MethodDeclaration n, String classname) throws Exception {
+    public String visit(MethodDeclaration n, ClassInfo info) throws Exception {
         String argumentList = n.f4.present() ? n.f4.accept(this, null) : "";
 
-        String myType = n.f1.accept(this, null);
-        String myName = n.f2.accept(this, null);
+        String type = n.f1.accept(this, null);
+        String name = n.f2.accept(this, null);
 
-        int offset = typeSizes.getOrDefault("pointer", 8);
+        int methodSize = typeSizes.getOrDefault("pointer", 8);
 
-        System.out.println(classname + "." + myName + " " + offset);
-        // System.out.println("Local vars:");
+        String classname = info.name;
+        int offset = info.methodOffset;
+
+        Method methodInfo = new Method(name, methodSize);
+
+        System.out.println(classname + "." + name + " " + offset);
+        System.out.println(argumentList);
+
+        info.methodOffset += methodSize;
+
 
         // super.visit(n, argu);
         return null;
@@ -160,7 +240,7 @@ class MyVisitor extends GJDepthFirst<String, String>{
      * f1 -> FormalParameterTail()
      */
     @Override
-    public String visit(FormalParameterList n, String argu) throws Exception {
+    public String visit(FormalParameterList n, ClassInfo argu) throws Exception {
         String ret = n.f0.accept(this, null);
 
         if (n.f1 != null) {
@@ -174,7 +254,7 @@ class MyVisitor extends GJDepthFirst<String, String>{
     * f0 -> ","
     * f1 -> FormalParameter()
     */
-    public String visit(FormalParameterTerm n, String argu) throws Exception {
+    public String visit(FormalParameterTerm n, ClassInfo argu) throws Exception {
         return n.f1.accept(this, argu);
     }
 
@@ -182,7 +262,7 @@ class MyVisitor extends GJDepthFirst<String, String>{
     * f0 -> ( FormalParameterTerm() )*
     */
     @Override
-    public String visit(FormalParameterTail n, String argu) throws Exception {
+    public String visit(FormalParameterTail n, ClassInfo argu) throws Exception {
         String ret = "";
         for ( Node node: n.f0.nodes) {
             ret += ", " + node.accept(this, null);
@@ -196,24 +276,24 @@ class MyVisitor extends GJDepthFirst<String, String>{
      * f1 -> Identifier()
      */
     @Override
-    public String visit(FormalParameter n, String argu) throws Exception{
+    public String visit(FormalParameter n, ClassInfo argu) throws Exception{
         String type = n.f0.accept(this, null);
         String name = n.f1.accept(this, null);
         return type + " " + name;
     }
 
     @Override
-    public String visit(ArrayType n, String argu) {
+    public String visit(ArrayType n, ClassInfo argu) {
         return "int[]";
     }
 
     @Override
-    public String visit(BooleanType n, String argu) {
+    public String visit(BooleanType n, ClassInfo argu) {
         return "boolean";
     }
 
     @Override
-    public String visit(IntegerType n, String argu) {
+    public String visit(IntegerType n, ClassInfo argu) {
         return "int";
     }
 
@@ -221,7 +301,7 @@ class MyVisitor extends GJDepthFirst<String, String>{
     * f0 -> <IDENTIFIER>
     */
     @Override
-    public String visit(Identifier n, String argu) {
+    public String visit(Identifier n, ClassInfo argu) {
         return n.f0.toString();
     }
 }
