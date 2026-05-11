@@ -12,6 +12,42 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
 
     Map<String, Integer> typeSizes;
 
+    private Method findMethodParent(ClassInfo info, String method){
+        String parent = info.parent;
+        
+        // Do this for all the parents e.g.(A extends B, B extends C, search B and then A).
+        while(parent != null){
+            ClassInfo p = symbolTable.get(parent);
+
+            if(p.methods.containsKey(method)){
+                return p.methods.get(method);
+            }
+
+            parent = p.parent;
+        }
+    }
+
+    private boolean hasCycle(String className){
+        ClassInfo current = symbolTable.get(className);
+
+        if(current == null){
+            return false;
+        }
+
+        while(current.parent != null){
+            if(current.parent.equals(className)){
+                return true;
+            }
+
+            current = symbolTable.get(current.parent);
+
+            if(current == null)
+                return false;
+        }
+
+        return false;
+    }
+
     public MyVisitor() {
         symbolTable = new HashMap<>();
         typeSizes = new HashMap<>();
@@ -34,13 +70,15 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
 
     class Method{
         String name;
+        String returnType;
         int size;
 
         ArrayList<Variable> params;
 
-        public Method(String name, int size){
+        public Method(String name, int size, String returnType){
             this.name = name;
             this.size = size;
+            this.returnType = returnType;
 
             this.params = new ArrayList<>();
         }
@@ -119,6 +157,11 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
 
         
         ClassInfo info = new ClassInfo(classname, null, 0, 0);
+
+        if(symbolTable.containsKey(classname)){
+            throw new Exception("Duplicate class: " + classname);
+        }
+        
         symbolTable.put(classname, info);
 
         n.f2.accept(this, argu);
@@ -152,9 +195,29 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
 
         String parentname = n.f3.accept(this, null);
 
-        ClassInfo info = new ClassInfo(classname, parentname, 0, 0);
+        if(!symbolTable.containsKey(parentname)){
+            throw new Exception(
+                "Class " + classname +
+                " extends unknown class " + parentname
+            );
+        }
+
+        ClassInfo parentInfo = symbolTable.get(parentname);
+
+
+        ClassInfo info = new ClassInfo(classname, parentname, parentInfo.fieldOffset, parentInfo.methodOffset);
+
+        if(symbolTable.containsKey(classname)){
+            throw new Exception("Duplicate class: " + classname);
+        }
+
+        if(hasCycle(classname)){
+            throw new Exception("Cycle " + classname);
+        }
 
         symbolTable.put(classname, info);
+
+
 
         n.f2.accept(this, argu);
         n.f3.accept(this, argu);
@@ -184,6 +247,13 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
 
         String classname = info.name;
         int offset = info.fieldOffset;
+
+        if(info.fields.containsKey(var)){
+            throw new Exception(
+                "Duplicate field " + var +
+                " in class " + info.name
+            );
+        }
 
         Variable varInfo = new Variable(var, type, varSize);
 
@@ -224,7 +294,40 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
         String classname = info.name;
         int offset = info.methodOffset;
 
+        // Check if method can be overriden.
+        Method inherited = findMethodInParents(info, name);
+
+        if(inherited != null){
+
+            if(!inherited.returnType.equals(type)){
+                throw new Exception("Invalid override for method RETURN TYPE " + name);
+            }
+
+            if(inherited.params.size() != methodInfo.params.size()){ 
+                throw new Exception("Invalid override for method PARAMS SIZE " + name);
+            }
+
+            for(int i=0; i<inherited.params.size(); i++){
+
+                String p1 = inherited.params.get(i).type;
+                String p2 = methodInfo.params.get(i).type;
+
+                if(!p1.equals(p2)){
+                    throw new Exception("Invalid override for method PARAM DIFF " + name);
+                }
+            }
+        }
+
         Method methodInfo = new Method(name, methodSize);
+
+        
+        // Check duplicate name of method.
+        if(info.methods.containsKey(name)){
+            throw new Exception(
+                "Duplicate method " + name +
+                "class " + info.name
+            );
+        }
         
 
         // Get arguments in String format.
@@ -248,13 +351,15 @@ class MyVisitor extends GJDepthFirst<String, MyVisitor.ClassInfo>{
                 Variable param = new Variable(name, type, size);
 
                 
-                methodInfo.params.add(param);
+                methodInfo.params.add(param); 
             }
         }
 
-        System.out.println(classname + "." + name + " " + offset);
+        System.out.println(classname + "." + methodInfo.name + " " + offset);
 
         info.methodOffset += methodSize;
+
+        info.methods.put(name, methodInfo);
 
 
         // super.visit(n, argu);
