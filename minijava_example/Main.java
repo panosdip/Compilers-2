@@ -21,8 +21,15 @@ public class Main {
 
             System.err.println("Program parsed successfully.");
 
-            MyVisitor eval = new MyVisitor();
-            root.accept(eval, null);
+            System.err.println("------Visitor 1-----");
+
+            MyVisitor visitor1 = new MyVisitor();
+            root.accept(visitor1, null);
+
+            System.err.println("------Visitor 2-----");
+
+            Visitor2 visitor2 = new Visitor2(visitor1.symbolTable);
+            root.accept(visitor2, null);
         }
         catch(ParseException ex){
             System.out.println(ex.getMessage());

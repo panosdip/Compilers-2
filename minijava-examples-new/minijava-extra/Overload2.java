@@ -6,11 +6,9 @@ class Overload2 {
 
 
 class A {
+    int foo(int x) { }
+}
 
-    int x;
-
-    public int x(){
-        return 1;
-    }
-
+class B extends A {
+    boolean foo(int x) { } // illegal
 }
