@@ -4,7 +4,7 @@ import visitor.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.HashSet;;
+import java.util.HashSet;
 
 
 
@@ -13,6 +13,20 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
     Map<String, ClassInfo> symbolTable;
 
     Map<String, Integer> typeSizes;
+
+    private boolean typeAcceptable(String type){
+        if(type.equals("int") || type.equals("int[]") || type.equals("boolean")){
+            return true;
+        }
+
+        if(symbolTable != null){
+            if(symbolTable.containsKey(type)){
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private Method findMethodParent(ClassInfo info, String method){
         String parent = info.parent;
@@ -396,6 +410,18 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
         String name = n.f1.accept(this, null);
         return type + " " + name;
     }
+
+    @Override
+    public String visit(Type n, ClassInfo argu) throws Exception{
+        String type = n.f0.accept(this, null);
+
+        if(!typeAcceptable(type)){
+            throw new Exception("Not known type: " + type);
+        }
+
+        return type;
+    }
+    
 
     @Override
     public String visit(ArrayType n, ClassInfo argu) {
