@@ -1,18 +1,25 @@
-class DoubleDeclaration1 {
-
-    public static void main(String[] args) {}
-
+class DerivedCall {
+	public static void main(String[] x) {
+		int i;
+		B b;
+		F f;
+		f = new F();
+		b = new B();
+		i = f.foo(b);
+		System.out.println(i);
+	}
 }
 
-
 class A {
+	int a;
+}
 
-    public A foo(A x){
+class B extends A {
+	int b;
+}
 
-        int x;
-
-        return this;
-    }
-
-
+class F {
+	public int foo(A a) {
+		return 0;
+	}
 }

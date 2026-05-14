@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Method { 
     String name;
@@ -7,6 +8,7 @@ public class Method {
     int size;
 
     ArrayList<Variable> params;
+    HashMap<String, Variable> locals;
 
     public Method(String name, int size, String returnType){
         this.name = name;
@@ -14,6 +16,7 @@ public class Method {
         this.returnType = returnType;
 
         this.params = new ArrayList<>();
+        this.locals = new HashMap<>();
     }
 
 }
