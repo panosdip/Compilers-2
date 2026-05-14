@@ -30,6 +30,11 @@ public class Main {
 
             Visitor2 visitor2 = new Visitor2(visitor1.symbolTable);
             root.accept(visitor2, null);
+
+            System.err.println("------Visitor 3-----");
+            Visitor3 visitor3 = new Visitor3(visitor2.symbolTable);
+            root.accept(visitor3, null);
+
         }
         catch(ParseException ex){
             System.out.println(ex.getMessage());

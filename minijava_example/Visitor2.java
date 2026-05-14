@@ -288,6 +288,10 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
 
         // Collect the local variables of the method.
         String localVars = n.f7.present() ? n.f7.accept(this, null) : "";
+
+        if(localVars == null){
+            localVars = "";
+        }
         
         String[] locals = localVars.split("\\s*,\\s*");
 

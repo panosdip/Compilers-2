@@ -20,7 +20,12 @@ class B extends A {
 }
 
 class F {
-	public int foo(A a) {
-		return 0;
+	public boolean foo(A a) {
+		boolean m;
+		boolean b;
+
+		boolean c;
+
+		return b && b;
 	}
 }
