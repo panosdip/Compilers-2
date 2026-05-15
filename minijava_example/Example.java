@@ -11,7 +11,7 @@ class DerivedCall {
 }
 
 class A {
-	int a;
+	int q;
 }
 
 class B extends A {
@@ -19,13 +19,13 @@ class B extends A {
     A a;
 }
 
-class F {
+class F extends A {
 	public boolean foo(A a) {
-		boolean m;
-		boolean b;
+		int[] m;
+		F b;
 
 		boolean c;
 
-		return b && b;
+		return f.foo();
 	}
 }

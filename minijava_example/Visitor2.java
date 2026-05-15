@@ -287,24 +287,27 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
         }
 
         // Collect the local variables of the method.
-        String localVars = n.f7.present() ? n.f7.accept(this, null) : "";
-
-        if(localVars == null){
-            localVars = "";
-        }
+        ArrayList<String> localDecls = new ArrayList<>();
         
-        String[] locals = localVars.split("\\s*,\\s*");
+        for(Node node : n.f7.nodes){
+            String decl = node.accept(this, null);
+        
+            if(decl != null && !decl.isEmpty()){
+                localDecls.add(decl);
+            }
+        }
 
-        for(String local : locals){
+        for(String local : localDecls){
+
             String[] parts = local.trim().split("\\s+");
-            
+
             if(parts.length == 2){
+
                 String localType = parts[0];
                 String localName = parts[1];
-                int size = typeSizes.getOrDefault(localType, 8);
-                
 
-                // Check if local is already in parameters.
+                int size = typeSizes.getOrDefault(localType, 8);
+
                 if(paramNames.contains(localName)){
                     throw new Exception(
                         "Local: " + localName +
@@ -312,19 +315,18 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
                     );
                 }
 
-                // Check if local is already in locals.
                 if(methodInfo.locals.containsKey(localName)){
                     throw new Exception(
                         "Duplicate local: " + localName +
-                        " already exists in method of " + methodInfo.name
+                        " already exists in method " + methodInfo.name
                     );
                 }
 
                 Variable localVar = new Variable(localName, localType, size);
 
+                methodInfo.locals.put(localVar.name, localVar);
             }
         }
-
 
 
         // Check if method can be overriden.
@@ -354,10 +356,8 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
         else{
 
             System.out.println(classname + "." + methodInfo.name + ": " + offset);
+
             info.methodOffset += methodSize;
-
-
-            
             info.methods.put(name, methodInfo);
             
         }
