@@ -7,18 +7,18 @@ package syntaxtree;
 /**
  * Grammar production:
  * f0 -> "!"
- * f1 -> Clause()
+ * f1 -> PrimaryExpression()
  */
 public class NotExpression implements Node {
    public NodeToken f0;
-   public Clause f1;
+   public PrimaryExpression f1;
 
-   public NotExpression(NodeToken n0, Clause n1) {
+   public NotExpression(NodeToken n0, PrimaryExpression n1) {
       f0 = n0;
       f1 = n1;
    }
 
-   public NotExpression(Clause n0) {
+   public NotExpression(PrimaryExpression n0) {
       f0 = new NodeToken("!");
       f1 = n0;
    }

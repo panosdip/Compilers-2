@@ -60,8 +60,8 @@ class MyVisitor extends GJDepthFirst<String, ClassInfo>{
         String classname = n.f1.accept(this, null);
         // System.out.println("Class: " + classname);
 
-        // ClassInfo info = new ClassInfo(classname, null, 0, 0);
-        // symbolTable.put(classname, info);
+        ClassInfo info = new ClassInfo(classname, null);
+        symbolTable.put(classname, info);
 
         // super.visit(n, info);
 

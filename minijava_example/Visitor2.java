@@ -80,8 +80,65 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
         String classname = n.f1.accept(this, null);
         // System.out.println("Class: " + classname);
 
-        // ClassInfo info = new ClassInfo(classname, null, 0, 0);
-        // symbolTable.put(classname, info);
+        ClassInfo info = new ClassInfo(classname, null);
+        symbolTable.put(classname, info);
+
+        Method mainMethod = new Method("main", 8, "void");
+
+        info.methods.put("main", mainMethod);
+
+        String paramName = n.f11.accept(this, null);
+        Variable param = new Variable(paramName, "String[]", 8);
+    
+        mainMethod.params.add(param);
+
+        // Collect the local variables of the method.
+        ArrayList<String> localDecls = new ArrayList<>();
+        
+        for(Node node : n.f14.nodes){
+            String decl = node.accept(this, null);
+        
+            if(decl != null && !decl.isEmpty()){
+                localDecls.add(decl);
+            }
+        }
+
+        HashSet<String> paramNames = new HashSet<>();
+
+
+        for(String local : localDecls){
+
+            String[] parts = local.trim().split("\\s+");
+
+            if(parts.length == 2){
+
+                String localType = parts[0];
+                String localName = parts[1];
+
+                int size = typeSizes.getOrDefault(localType, 8);
+
+                if(paramNames.contains(localName)){
+                    throw new Exception(
+                        "Local: " + localName +
+                        " already exists in parameters of " + mainMethod.name
+                    );
+                }
+
+                if(mainMethod.locals.containsKey(localName)){
+                    throw new Exception(
+                        "Duplicate local: " + localName +
+                        " already exists in method " + mainMethod.name
+                    );
+                }
+
+                Variable localVar = new Variable(localName, localType, size);
+
+                mainMethod.locals.put(localVar.name, localVar);
+            }
+        }
+
+
+
 
         // super.visit(n, info);
 

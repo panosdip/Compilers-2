@@ -17,7 +17,17 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
     // Find the identifier starting from locals, parameters, fields and last inherited
     // if it exists return the type of the identifier.
     private String getType(String name, CurrentInfo argu) throws Exception{
+        
+        if(name.equals("int") || name.equals("boolean") || name.equals("int[]")){
+            return name;
+        }
+
         if(argu == null){
+            return name;
+        }
+
+        // Class names
+        if(symbolTable.containsKey(name)){
             return name;
         }
 
@@ -70,11 +80,14 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             Variable current_param = methodParams.get(pos);
 
             String paramType = getType(decl, argu);
+            System.out.println(paramType);
             String methodParamType = current_param.type;
 
             if(!paramType.equals(methodParamType)){
                 return false;
             }
+
+            pos++;
         }
 
         return true;
@@ -159,24 +172,33 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
      */
 
     // NEED TO DO THIS ALSO FOR MAIN.
-    // @Override
-    // public String visit(MainClass n, CurrentInfo argu) throws Exception {
+    @Override
+    public String visit(MainClass n, CurrentInfo argu) throws Exception {
 
-    //     String classname = n.f1.accept(this, argu);
-    //     // System.out.println("Class: " + classname);
+        String className = n.f1.accept(this, null);
 
-    //     // argu.currentClass = symbolTable.get(classname);
+        ClassInfo currentClass = symbolTable.get(className);
 
+        if(currentClass == null){
+            throw new Exception("Main class " + className + " not found");
+        }
 
-    //     // ClassInfo info = new ClassInfo(classname, null, 0, 0);
-    //     // symbolTable.put(classname, info);
+        Method mainMethod = currentClass.methods.get("main");
 
-    //     // super.visit(n, info);
+        if(mainMethod == null){
+            throw new Exception("main method not found in class " + className);
+        }
 
-    //     // System.out.println();
+        CurrentInfo info = new CurrentInfo(currentClass, mainMethod);
 
-    //     return null;
-    // }
+        // visit variable declarations
+        n.f14.accept(this, info);
+
+        // visit statements
+        n.f15.accept(this, info);
+
+        return null;
+    }
 
     /**
      * f0 -> "class"
@@ -236,6 +258,142 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         return null;
     }
 
+    /*
+        f0 -> Identifier
+        f1 -> "="
+        f2 -> Expression
+        f3 -> ";"
+    */
+
+    @Override
+    public String visit(AssignmentStatement n, CurrentInfo argu) throws Exception {
+
+        String var = n.f0.accept(this, argu);
+
+        String varType = getType(var, argu);
+
+        String expr = n.f2.accept(this, argu);
+
+        String exprType = getType(expr, argu);
+
+        System.out.println(varType + " " + exprType);
+
+        if(!varType.equals(exprType)){
+            throw new Exception("Bad assigment of " + exprType + " to " + varType);
+        }
+
+        return exprType;
+    }
+
+    /*
+        f0 -> Identifier 
+        f1 -> "[" 
+        f2 -> Expression
+        f3 -> "]" 
+        f4 -> "=" 
+        f5 -> Expression 
+        f6 -> ";"
+    
+    */
+
+    @Override
+    public String visit(ArrayAssignmentStatement n, CurrentInfo argu) throws Exception {
+
+        String var = n.f0.accept(this, argu);
+
+        String varType = getType(var, argu);
+
+        if(!varType.equals("int[]")){
+            throw new Exception("Var for array assigment has to be int " + var + " is " + varType);
+        }
+
+        String expr1 = n.f2.accept(this, argu);
+
+        String exprType1 = getType(expr1, argu);
+
+        System.out.println(varType + " " + exprType1);
+
+        if(!exprType1.equals("int")){
+            throw new Exception("Bad array lookup of " + exprType1 + " instead of int");
+        }
+
+        String expr2 = n.f5.accept(this, argu);
+
+        String exprType2 = getType(expr2, argu);
+
+        if(!exprType2.equals("int")){
+            throw new Exception("Bad array asigment value of " + exprType2 + " instead of int");
+        }
+
+
+        return "int";
+    }   
+
+    /*
+        f0 -> "if" 
+        f1 -> "("
+        f2 -> Expression 
+        f3 -> ")"
+        f4 -> Statement 
+        f5 -> "else"
+        f6 -> Statement
+    */
+
+    @Override
+    public String visit(IfStatement n, CurrentInfo argu) throws Exception {
+        String expr = n.f2.accept(this, argu);
+        String exprType = getType(expr, argu);
+
+        if(!exprType.equals("boolean")){
+            throw new Exception("If statement needs boolean as expression instead got " + exprType);
+        }
+
+
+       return null;
+    }
+
+    /*
+        f0 -> "while" 
+        f1 -> "("
+        f2 -> Expression 
+        f3 -> ")"
+        f4 -> Statement 
+    */
+
+    @Override
+    public String visit(WhileStatement n, CurrentInfo argu) throws Exception {
+        String expr = n.f2.accept(this, argu);
+        String exprType = getType(expr, argu);
+
+        if(!exprType.equals("boolean")){
+            throw new Exception("While statement needs boolean as expression instead got " + exprType);
+        }
+
+
+       return null;
+    }
+
+    /*
+        f0 -> "System.out.println" 
+        f1 -> "(" 
+        f2 -> Expression 
+        f3 -> ")" 
+        f4 -> ";"
+    */
+
+    @Override
+    public String visit(PrintStatement n, CurrentInfo argu) throws Exception {
+        String expr = n.f2.accept(this, argu);
+        String exprType = getType(expr, argu);
+
+        if(!exprType.equals("int")){
+            throw new Exception("Print statement needs int as expression instead got " + exprType);
+        }
+
+
+       return null;
+    }
+
 
     
     /**
@@ -263,10 +421,37 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         info.currentMethod = method;
 
+        String statement = n.f8.accept(this, info);
+
         String exp = n.f10.accept(this, info);
+
+        String expType = getType(exp, info);
+
+        if(!expType.equals(method.returnType)){
+            throw new Exception("Method " + method.name + " returns " + expType + " instead of " + method.returnType);
+        }
+
 
         // super.visit(n, argu);
         return null;
+    }
+
+    @Override
+    public String visit(PrimaryExpression n, CurrentInfo argu) throws Exception {
+
+        String value = n.f0.accept(this, argu);
+
+        // literals/types already resolved
+        if(value.equals("int") ||
+            value.equals("boolean") ||
+            value.equals("int[]") ||
+            symbolTable.containsKey(value)) {
+
+            return value;
+        }
+
+        // identifier expression
+        return getType(value, argu);
     }
 
     // f0 -> PrimaryExpression 
@@ -304,7 +489,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             throw new Exception("Operator < needs type of int.");
         }
 
-        return "int";
+        return "boolean";
     }
 
     @Override
@@ -375,7 +560,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         System.out.println(leftExp + " " + rightExp);
 
         if(!leftType.equals("int[]") || !rightType.equals("int")){
-            throw new Exception("Operator [] needs type of int[] and int.");
+            throw new Exception("Operator [] needs type of int[] and int. Instead got " + leftType + " and " + rightType);
         }
 
         return "int";
@@ -418,6 +603,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         String leftType = getType(leftExp, argu);
 
+        Method method = null;
 
         // If leftExp is Identifier then check if the method exists in that class or if it is inherited.
         // and check if MessageSend is legal.
@@ -433,7 +619,6 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             String methodCalled = n.f2.accept(this, argu);
 
             if(info.methods != null){
-                Method method = null;
 
                 // Check if method is in class or inherited.
                 if(info.methods.containsKey(methodCalled)){
@@ -460,11 +645,6 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
                 if(!checkParamsPassed(params, new CurrentInfo(info, method))){
                     throw new Exception("Parameters passed differ from the method's " + method.name + " signature");
                 }
-                // System.out.println(params);
-                // for(String par : params){
-                //     System.out.println(getType(par, argu));;
-                // }
-
             }
 
 
@@ -473,7 +653,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             throw new Exception("Operator .method needs type of class.");
         }
 
-        return "int";
+        return method.returnType;
     }
 
     /**
@@ -537,5 +717,59 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         String name = n.f0.toString();
         
         return name;
+    }
+
+    @Override
+    public String visit(ThisExpression n, CurrentInfo argu) throws Exception{
+        if(argu.currentClass == null){
+            throw new Exception("'this' used outside class");
+        }
+
+        return argu.currentClass.name;
+    }
+
+    @Override
+    public String visit(ArrayAllocationExpression n, CurrentInfo argu) throws Exception{
+
+        String expr = n.f3.accept(this, argu);
+
+        String exprType = getType(expr, argu);
+
+        if(!exprType.equals("int")){
+            throw new Exception("Array size expression must be int");
+        }
+
+        return "int[]";
+    }
+
+    @Override
+    public String visit(AllocationExpression n, CurrentInfo argu) throws Exception {
+
+        String className = n.f1.accept(this, argu);
+
+
+        if(!symbolTable.containsKey(className)){
+            throw new Exception("Class " + className + " not declared");
+        }
+
+        return className;
+    }
+
+    @Override
+    public String visit(NotExpression n, CurrentInfo argu) throws Exception {
+
+        String expr = n.f1.accept(this, argu);
+        String exprType = getType(expr, argu);
+
+        if(!exprType.equals("boolean")){
+            throw new Exception("Operator ! requires boolean");
+        }
+
+        return "boolean";
+    }
+
+    @Override
+    public String visit(BracketExpression n, CurrentInfo argu) throws Exception {
+        return n.f1.accept(this, argu);
     }
 }
