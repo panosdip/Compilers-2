@@ -1,24 +1,26 @@
-class FieldAndClassConflict {
+class NoMatchingMethod {
 
-    public static void main(String[] args){ 
-	System.out.println(new A().B());
+    public static void main(String[] args){
+        A a;
+        B b;
+        a = new A ();
+        b = new B ();
+        a = a.foo(a);
     }
 
 }
 
 
-
 class A {
+    int 
 
-    A A;
-
-    public int B(){
-	return 1;
+    public A foo(A a){
+        return a;
     }
+
 }
 
 class B {
 
-    B A;
 
 }

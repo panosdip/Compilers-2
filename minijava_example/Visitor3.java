@@ -1,10 +1,8 @@
 
+import java.util.ArrayList;
+import java.util.Map;
 import syntaxtree.*;
 import visitor.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashSet;
 
 class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
@@ -32,6 +30,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         return false;
     }
 
+    
     // Find the identifier starting from locals, parameters, fields and last inherited
     // if it exists return the type of the identifier.
     private String getType(String name, CurrentInfo argu) throws Exception{
@@ -41,6 +40,8 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         }
 
         if(argu == null){
+            System.out.println(name);
+
             return name;
         }
 
@@ -48,6 +49,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         if(symbolTable.containsKey(name)){
             return name;
         }
+
 
         if(argu.currentMethod != null){
 
@@ -98,7 +100,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             Variable current_param = methodParams.get(pos);
 
             String paramType = getType(decl, argu);
-            System.out.println(paramType);
+            // System.out.println(paramType);
             String methodParamType = current_param.type;
 
             if(!isSubType(paramType, methodParamType)){
@@ -120,7 +122,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         }
 
         for(Variable Param : list){
-            System.out.println(Param.name);
+            // System.out.println(Param.name);
             if(Param.name.equals(paramName)){
                 return Param;
             }
@@ -291,13 +293,14 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         String varType = getType(var, argu);
 
+        // System.out.println(var);
         String expr = n.f2.accept(this, argu);
 
         String exprType = getType(expr, argu);
 
-        System.out.println(varType + " " + exprType);
+        // System.out.println(varType + " " + exprType);
 
-        if(!varType.equals(exprType)){
+        if(!isSubType(exprType, varType)){
             throw new Exception("Bad assigment of " + exprType + " to " + varType);
         }
 
@@ -330,7 +333,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         String exprType1 = getType(expr1, argu);
 
-        System.out.println(varType + " " + exprType1);
+        // System.out.println(varType + " " + exprType1);
 
         if(!exprType1.equals("int")){
             throw new Exception("Bad array lookup of " + exprType1 + " instead of int");
@@ -436,22 +439,47 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         String name = n.f2.accept(this, info);
 
-        Method method = info.currentClass.getMethod(name);
+        ArrayList<Method> list = info.currentClass.methods.get(name);
 
-        info.currentMethod = method;
+        Boolean illegal = true;
 
-        String statement = n.f8.accept(this, info);
+        Method m = null;
 
-        String exp = n.f10.accept(this, info);
+        String exp;
+        String expType = null;
+        
 
-        String expType = getType(exp, info);
+        for(Method candidate : list){
 
-        if(!expType.equals(method.returnType)){
-            throw new Exception("Method " + method.name + " returns " + expType + " instead of " + method.returnType);
+            info.currentMethod = candidate;
+
+            exp = n.f10.accept(this, info);
+
+            expType = getType(exp, info);
+
+
+            if(!expType.equals(candidate.returnType)){
+                continue;
+            }
+            else{
+
+                illegal = false;
+
+                m = candidate;
+            }
+
         }
 
+        info.currentMethod = m;
+    
+        String statement = n.f8.accept(this, info);
 
+        
+        if(illegal){
+            throw new Exception("Method " + info.currentMethod.name + " returns " + expType + " instead of " + info.currentMethod.returnType);
+        }
         // super.visit(n, argu);
+
         return null;
     }
 
@@ -469,7 +497,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             return value;
         }
 
-        System.out.println(argu.currentClass.name + " " );
+        // System.out.println(argu.currentClass.name + " " );
 
         // identifier expression
         return getType(value, argu);
@@ -487,7 +515,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         String leftType = getType(leftExp, argu);
         String rightType = getType(rightExp, argu);
 
-        System.out.println(leftExp + " " + rightExp);
+        // System.out.println(leftExp + " " + rightExp);
 
         if(!leftType.equals("boolean") || !rightType.equals("boolean")){
             throw new Exception("Operator && needs type of boolean.");
@@ -504,7 +532,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         String leftType = getType(leftExp, argu);
         String rightType = getType(rightExp, argu);
 
-        System.out.println(leftExp + " " + rightExp);
+        // System.out.println(leftExp + " " + rightExp);
 
         if(!leftType.equals("int") || !rightType.equals("int")){
             throw new Exception("Operator < needs type of int.");
@@ -521,7 +549,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         String leftType = getType(leftExp, argu);
         String rightType = getType(rightExp, argu);
 
-        System.out.println(leftExp + " " + rightExp);
+        // System.out.println(leftExp + " " + rightExp);
 
         if(!leftType.equals("int") || !rightType.equals("int")){
             throw new Exception("Operator + needs type of int.");
@@ -538,7 +566,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         String leftType = getType(leftExp, argu);
         String rightType = getType(rightExp, argu);
 
-        System.out.println(leftExp + " " + rightExp);
+        // System.out.println(leftExp + " " + rightExp);
 
         if(!leftType.equals("int") || !rightType.equals("int")){
             throw new Exception("Operator - needs type of int.");
@@ -555,7 +583,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         String leftType = getType(leftExp, argu);
         String rightType = getType(rightExp, argu);
 
-        System.out.println(leftExp + " " + rightExp);
+        // System.out.println(leftExp + " " + rightExp);
 
         if(!leftType.equals("int") || !rightType.equals("int")){
             throw new Exception("Operator * needs type of int.");
@@ -578,7 +606,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         String leftType = getType(leftExp, argu);
         String rightType = getType(rightExp, argu);
 
-        System.out.println(leftExp + " " + rightExp);
+        // System.out.println(leftExp + " " + rightExp);
 
         if(!leftType.equals("int[]") || !rightType.equals("int")){
             throw new Exception("Operator [] needs type of int[] and int. Instead got " + leftType + " and " + rightType);
@@ -599,7 +627,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         String leftType = getType(leftExp, argu);
 
-        System.out.println(leftExp + "." + "length");
+        // System.out.println(leftExp + "." + "length");
 
         if(!leftType.equals("int[]")){
             throw new Exception("Operator .length needs type of int[].");
@@ -644,50 +672,45 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
             if(info.methods != null){
 
-                // Check if method is in class or inherited.
-                if(info.methods.containsKey(methodCalled)){
-                    ArrayList<Method> candidates = info.methods.get(methodCalled);
+                ArrayList<Method> candidates = info.methods.get(methodCalled);
 
-                    if(candidates == null){
-                        method = checkMethodInherited(methodCalled, info);
-                    }
-                    else{
-                        for(Method m : candidates){
+                System.out.println(info.methods.containsKey(methodCalled));
 
-                            CurrentInfo tmp = new CurrentInfo(info, m);
+                if(candidates != null){
+                    for(Method m : candidates){
+                        CurrentInfo tmp = new CurrentInfo(info, m);
 
-                            if(checkParamsPassed(params, tmp)){
-                                method = m;
-                                break;
-                            }
+                        if(checkParamsPassed(params, tmp)){
+                            method = m;
+                            break;
                         }
                     }
                 }
-                else{
-                    method = checkMethodInherited(methodCalled, info);
-                }
+            }
 
-
-
-                if(params != null && params.trim().isEmpty()){
-                    params = null;
-                }
-
-                System.err.println(params);
-
-            
-                if(!checkParamsPassed(params, new CurrentInfo(info, method))){
-                    throw new Exception("Parameters passed differ from the method's " + method.name + " signature");
-                }
-
-                if(method == null){
-                    throw new Exception("Method " + methodCalled + " does not exist in class " + className);
-                }
-
+            if(method == null){
+                method = checkMethodInherited(methodCalled, info);
             }
 
 
+
+            if(params != null && params.trim().isEmpty()){
+                params = null;
+            }
+
+            // System.err.println(params);
+            if(method == null){
+                throw new Exception("Method " + methodCalled + " does not exist in class " + className + " or params not match");
+            }
+        
+            if(!checkParamsPassed(params, new CurrentInfo(info, method))){
+                throw new Exception("Parameters passed differ from the method's " + method.name + " signature");
+            }
+
+
+
         }
+
         else{
             throw new Exception("Operator .method needs type of class.");
         }

@@ -1,10 +1,10 @@
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import syntaxtree.*;
 import visitor.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.HashSet;
 
 
 
@@ -476,14 +476,11 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
             }
             
         }
-        else{
+             
+        System.out.println(classname + "." + methodInfo.name + ": " + offset);
 
-            System.out.println(classname + "." + methodInfo.name + ": " + offset);
-
-            info.methodOffset += methodSize;
-            info.methods.computeIfAbsent(name, k -> new ArrayList<>()).add(methodInfo);
-            
-        }
+        info.methodOffset += methodSize;
+        info.methods.computeIfAbsent(name, k -> new ArrayList<>()).add(methodInfo);
 
 
 
