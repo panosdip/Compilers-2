@@ -9,7 +9,7 @@ public class Method {
 
     ArrayList<Variable> params;
     HashMap<String, Variable> locals;
-
+    
     public Method(String name, int size, String returnType){
         this.name = name;
         this.size = size;

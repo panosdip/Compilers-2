@@ -14,6 +14,42 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
 
     Map<String, Integer> typeSizes;
 
+    private boolean isSubType(String child, String parent){
+        if(child.equals(parent)){
+            return true;
+        }
+
+        ClassInfo info = symbolTable.get(child);
+
+        while(info != null && info.parent != null){
+            if(info.parent.equals(parent)){
+                return true;
+            }
+
+            info = symbolTable.get(info.parent);
+        }
+
+        return false;
+    }
+
+    private boolean checkParamsOverload(ArrayList<Variable> list1, ArrayList<Variable> list2){
+        int size = list1.size();
+
+        for(int i = 0; i < size; i++){
+            Variable var1 = list1.get(i);
+            Variable var2 = list2.get(i);
+            
+            // They differ so overloading is allowed.
+            if(!isSubType(var1.type, var2.type)){
+                return true;
+            }
+            
+        }
+
+        return false;
+
+    }
+
     private boolean typeAcceptable(String type){
         if(type.equals("int") || type.equals("int[]") || type.equals("boolean")){
             return true;
@@ -28,15 +64,36 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
         return false;
     }
 
-    private Method findMethodParent(ClassInfo info, String method){
+    private Method findMethodParent(ClassInfo info, Method method){
         String parent = info.parent;
         
         // Do this for all the parents e.g.(A extends B, B extends C, search B and then A).
         while(parent != null){
             ClassInfo p = symbolTable.get(parent);
 
-            if(p.methods.containsKey(method)){
-                return p.methods.get(method);
+            // Check for all possible methods that are saved with the same name.
+            if(p != null && p.methods.containsKey(method.name)){
+                for(Method candidate : p.methods.get(method.name)){
+                    
+                    // First check the params.
+                    if(candidate.params.size() != method.params.size()){
+                        continue;
+                    }
+
+                    boolean theyMatch = true;
+
+                    for(int i = 0; i < candidate.params.size(); i++){
+                        if(!candidate.params.get(i).type.equals(method.params.get(i).type)){
+                            theyMatch = false;
+
+                            break;
+                        }
+                    }
+
+                    if(theyMatch){
+                        return candidate;
+                    }
+                }
             }
 
             parent = p.parent;
@@ -85,7 +142,7 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
 
         Method mainMethod = new Method("main", 8, "void");
 
-        info.methods.put("main", mainMethod);
+        info.methods.computeIfAbsent("main", k -> new ArrayList<>()).add(mainMethod);
 
         String paramName = n.f11.accept(this, null);
         Variable param = new Variable(paramName, "String[]", 8);
@@ -294,14 +351,6 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
         // Get info of class.
         String classname = info.name;
         int offset = info.methodOffset;
-        
-        // Check duplicate name of method.
-        if(info.methods.containsKey(name)){
-            throw new Exception(
-                "Duplicate method " + name +
-                "class " + info.name
-            );
-        }
 
         // Create method.
         Method methodInfo = new Method(name, methodSize, type);
@@ -342,6 +391,23 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
                 methodInfo.params.add(param); 
             }
         }
+
+        // Check Overloading.
+        if(info.methods.containsKey(name)){
+            ArrayList<Method> existingList = info.methods.get(name);
+
+            if(existingList != null){
+                for(Method existing : existingList){
+                    if(existing.params.size() == methodInfo.params.size()){
+                        if(!checkParamsOverload(existing.params, methodInfo.params)){
+                            throw new Exception("Not overloading for function: " + name + " allowed.");
+                        }
+
+                    }
+                }
+            }
+        }
+
 
         // Collect the local variables of the method.
         ArrayList<String> localDecls = new ArrayList<>();
@@ -387,7 +453,7 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
 
 
         // Check if method can be overriden.
-        Method inherited = findMethodParent(info, methodInfo.name);
+        Method inherited = findMethodParent(info, methodInfo);
 
         if(inherited != null){
 
@@ -415,7 +481,7 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
             System.out.println(classname + "." + methodInfo.name + ": " + offset);
 
             info.methodOffset += methodSize;
-            info.methods.put(name, methodInfo);
+            info.methods.computeIfAbsent(name, k -> new ArrayList<>()).add(methodInfo);
             
         }
 

@@ -7,10 +7,17 @@ public class ClassInfo {
     String parent;
 
     Map<String, Variable> fields;
-    Map<String, Method> methods;
+    Map<String, ArrayList<Method>> methods;
 
     int fieldOffset;
     int methodOffset;
+
+    public Method getMethod(String methodName){
+        ArrayList<Method> list = methods.get(methodName);
+
+        return list.get(0);
+    }
+
 
     public ClassInfo(String className, String parentName){
         this.name = className;

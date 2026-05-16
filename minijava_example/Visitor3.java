@@ -14,6 +14,24 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         this.symbolTable = symbolTable;
     }
 
+    private boolean isSubType(String child, String parent){
+        if(child.equals(parent)){
+            return true;
+        }
+
+        ClassInfo info = symbolTable.get(child);
+
+        while(info != null && info.parent != null){
+            if(info.parent.equals(parent)){
+                return true;
+            }
+
+            info = symbolTable.get(info.parent);
+        }
+
+        return false;
+    }
+
     // Find the identifier starting from locals, parameters, fields and last inherited
     // if it exists return the type of the identifier.
     private String getType(String name, CurrentInfo argu) throws Exception{
@@ -83,7 +101,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             System.out.println(paramType);
             String methodParamType = current_param.type;
 
-            if(!paramType.equals(methodParamType)){
+            if(!isSubType(paramType, methodParamType)){
                 return false;
             }
 
@@ -102,6 +120,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         }
 
         for(Variable Param : list){
+            System.out.println(Param.name);
             if(Param.name.equals(paramName)){
                 return Param;
             }
@@ -131,7 +150,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         while(parentClass != null){
             if(parentClass.methods.containsKey(methodName)){
-                return parentClass.methods.get(methodName);
+                return parentClass.getMethod(methodName);
             }
 
             parentClass = symbolTable.get(parentClass.parent);
@@ -183,7 +202,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             throw new Exception("Main class " + className + " not found");
         }
 
-        Method mainMethod = currentClass.methods.get("main");
+        Method mainMethod = currentClass.getMethod("main");
 
         if(mainMethod == null){
             throw new Exception("main method not found in class " + className);
@@ -241,8 +260,8 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
     public String visit(ClassExtendsDeclaration n, CurrentInfo argu) throws Exception {
         n.f0.accept(this, argu);
 
-        String classname = n.f1.accept(this, null);
-        String parentname = n.f3.accept(this, null);
+        String classname = n.f1.accept(this, argu);
+        String parentname = n.f3.accept(this, argu);
 
         ClassInfo parentInfo = symbolTable.get(parentname);
 
@@ -415,9 +434,9 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
     @Override
     public String visit(MethodDeclaration n, CurrentInfo info) throws Exception {
 
-        String name = n.f2.accept(this, null);
+        String name = n.f2.accept(this, info);
 
-        Method method = info.currentClass.methods.get(name);
+        Method method = info.currentClass.getMethod(name);
 
         info.currentMethod = method;
 
@@ -449,6 +468,8 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
             return value;
         }
+
+        System.out.println(argu.currentClass.name + " " );
 
         // identifier expression
         return getType(value, argu);
@@ -618,33 +639,51 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
             String methodCalled = n.f2.accept(this, argu);
 
+            // Check if the parameters passed are legal.
+            String params = n.f4.present() ? n.f4.accept(this, argu) : "";
+
             if(info.methods != null){
 
                 // Check if method is in class or inherited.
                 if(info.methods.containsKey(methodCalled)){
-                    method = info.methods.get(methodCalled);
+                    ArrayList<Method> candidates = info.methods.get(methodCalled);
+
+                    if(candidates == null){
+                        method = checkMethodInherited(methodCalled, info);
+                    }
+                    else{
+                        for(Method m : candidates){
+
+                            CurrentInfo tmp = new CurrentInfo(info, m);
+
+                            if(checkParamsPassed(params, tmp)){
+                                method = m;
+                                break;
+                            }
+                        }
+                    }
                 }
                 else{
                     method = checkMethodInherited(methodCalled, info);
+                }
+
+
+
+                if(params != null && params.trim().isEmpty()){
+                    params = null;
+                }
+
+                System.err.println(params);
+
+            
+                if(!checkParamsPassed(params, new CurrentInfo(info, method))){
+                    throw new Exception("Parameters passed differ from the method's " + method.name + " signature");
                 }
 
                 if(method == null){
                     throw new Exception("Method " + methodCalled + " does not exist in class " + className);
                 }
 
-                
-
-                // Check if the parameters passed are legal.
-                String params = n.f4.present() ? n.f4.accept(this, argu) : "";
-
-                if(params != null && params.trim().isEmpty()){
-                    params = null;
-                }
-
-            
-                if(!checkParamsPassed(params, new CurrentInfo(info, method))){
-                    throw new Exception("Parameters passed differ from the method's " + method.name + " signature");
-                }
             }
 
 
