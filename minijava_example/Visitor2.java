@@ -14,6 +14,70 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
 
     Map<String, Integer> typeSizes;
 
+    private boolean legalOverload(ArrayList<Variable> p1,ArrayList<Variable> p2) {
+
+        for(int i=0; i< p1.size(); i++){
+
+            String t1 = p1.get(i).type;
+            String t2 = p2.get(i).type;
+
+            boolean related = isSubType(t1, t2) || isSubType(t2, t1);
+
+            // found args that are different.
+            if(!related){
+                return true;
+            }
+        }
+
+        // All args are related.
+        return false;
+    }
+
+    private boolean sameSignature(Method a,Method b){
+
+        if(!a.name.equals(b.name)){
+            return false;
+        }
+
+        if(a.params.size() != b.params.size()){
+            return false;
+        }
+
+        for(int i=0; i< a.params.size(); i++){
+
+            String t1 = a.params.get(i).type;
+            String t2 = b.params.get(i).type;
+
+            if(!t1.equals(t2)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private Method findExactOverride(ClassInfo parent, Method target){
+
+        while(parent != null){
+
+            ArrayList<Method> methods = parent.methods.get(target.name);
+
+            if(methods != null){
+
+                for(Method m : methods){
+
+                    if(sameSignature(m, target)){
+                        return m;
+                    }
+                }
+            }
+
+            parent = symbolTable.get(parent.parent);
+        }
+
+        return null;
+    }
+
     private boolean isSubType(String child, String parent){
         if(child.equals(parent)){
             return true;
@@ -343,148 +407,162 @@ class Visitor2 extends GJDepthFirst<String, ClassInfo>{
     @Override
     public String visit(MethodDeclaration n, ClassInfo info) throws Exception {
 
-        String type = n.f1.accept(this, null);
-        String name = n.f2.accept(this, null);
-
-        int methodSize = typeSizes.getOrDefault("pointer", 8);
         
-        // Get info of class.
-        String classname = info.name;
-        int offset = info.methodOffset;
+        
+        // Get Method info.
 
-        // Create method.
-        Method methodInfo = new Method(name, methodSize, type);
+        String returnType = n.f1.accept(this, null);
+        String methodName = n.f2.accept(this, null);
 
-        // Get arguments in String format.
+        Method methodInfo = new Method(methodName, typeSizes.getOrDefault("pointer", 8), returnType);
+
+        // -------------------------
+        // Get arguments.
+        // -------------------------
+        
         String argumentList = n.f4.present() ? n.f4.accept(this, info) : "";
 
-        // Split the arguments list into <type> <name>, create variable and push it to the list.
-        String[] declarations = argumentList.split("\\s*,\\s*");
 
-        // Create a set with the given parameters names.
+        // Check if parameter name is already given.
         HashSet<String> paramNames = new HashSet<>();
-        
-        // Create the args list for method.
-        for(String decl : declarations){
-            String[] parts = decl.trim().split("\\s+");
-            
-            if(parts.length == 2){
+
+        if(!argumentList.isBlank()){
+
+            // Split the list to <param1> <param2> ...
+            String[] declarations =
+                argumentList.split("\\s*,\\s*");
+
+            for(String decl : declarations){
+
+                // Split each param to <type> <paramName>.
+                String[] parts = decl.trim().split("\\s+");
+
+                if(parts.length != 2){
+                    throw new Exception(
+                        "Invalid parameter declaration in method "
+                        + methodName
+                    );
+                }
+
                 String argType = parts[0];
                 String argName = parts[1];
-                int size = typeSizes.getOrDefault(argType, 8);
-                
-                
-                // Check if the current arg name is already given.
+
                 if(paramNames.contains(argName)){
                     throw new Exception(
-                        "Duplicate param: " + argName +
-                        " already exists in method " + methodInfo.name
+                        "Duplicate parameter: " + argName
                     );
                 }
 
-                // add parameteres name to the set.
                 paramNames.add(argName);
-                
-                // Create parameter and add it to parameters list.
-                Variable param = new Variable(argName, argType, size);
-                
-                methodInfo.params.add(param); 
+
+                Variable param = new Variable(argName, argType, typeSizes.getOrDefault(argType, 8));
+
+                methodInfo.params.add(param);
             }
         }
 
-        // Check Overloading.
-        if(info.methods.containsKey(name)){
-            ArrayList<Method> existingList = info.methods.get(name);
+        // -------------------------
+        // Get the local variables.
+        // -------------------------
 
-            if(existingList != null){
-                for(Method existing : existingList){
-                    if(existing.params.size() == methodInfo.params.size()){
-                        if(!checkParamsOverload(existing.params, methodInfo.params)){
-                            throw new Exception("Not overloading for function: " + name + " allowed.");
-                        }
+        for(Node node : n.f7.nodes){
 
+            String decl = node.accept(this, null);
+
+            if(decl == null || decl.isBlank()){
+                continue;
+            }
+
+            // Split the local variables to <type> <varName>.
+            String[] parts = decl.trim().split("\\s+");
+
+            if(parts.length != 2) {
+                throw new Exception(
+                    "Invalid local declaration in method "
+                    + methodName
+                );
+            }
+
+            String localType = parts[0];
+            String localName = parts[1];
+
+            // Check if there is a parameter with that name
+            // because it cannot shadow it.
+
+            if(paramNames.contains(localName)) {
+                throw new Exception(
+                    "Local variable '" + localName +
+                    "' already defined as parameter"
+                );
+            }
+
+            if(methodInfo.locals.containsKey(localName)) {
+                throw new Exception(
+                    "Duplicate local variable: " + localName
+                );
+            }
+
+            Variable localVar = new Variable(localName, localType, typeSizes.getOrDefault(localType, 8));
+
+            methodInfo.locals.put(localName, localVar);
+        }
+
+        // --------------------------------------------------
+        // Check if the method can be override.
+        // --------------------------------------------------
+
+
+        Method inheritedExact = findExactOverride(symbolTable.get(info.parent), methodInfo);
+
+        boolean isOverride = (inheritedExact != null);
+
+        if(isOverride){
+            // return type must match exactly
+            if(!inheritedExact.returnType.equals(returnType)) {
+
+                throw new Exception("Invalid override of method " + methodName + ": return type mismatch");
+            }
+
+        }
+
+        // --------------------------------------------------
+        // Check if the method can be overloaded.
+        // --------------------------------------------------
+
+        else{
+
+            ArrayList<Method> visibleMethods = info.methods.get(methodName);
+
+            if(visibleMethods != null){
+                for(Method existing : visibleMethods){
+
+                    // Check the parameters for overloading.
+
+                    if(existing.params.size() != methodInfo.params.size()){
+                        continue;
+                    }
+
+
+                    if(!legalOverload(existing.params, methodInfo.params)){
+
+                        throw new Exception("Illegal overload for method " + methodName);
                     }
                 }
+
+                info.methodOffset += methodInfo.size;
             }
         }
 
 
-        // Collect the local variables of the method.
-        ArrayList<String> localDecls = new ArrayList<>();
-        
-        for(Node node : n.f7.nodes){
-            String decl = node.accept(this, null);
-        
-            if(decl != null && !decl.isEmpty()){
-                localDecls.add(decl);
-            }
-        }
+        // -------------------------
+        // Insert method.
+        // -------------------------
 
-        for(String local : localDecls){
+        info.methods.computeIfAbsent(methodName, k -> new ArrayList<>()).add(methodInfo);
 
-            String[] parts = local.trim().split("\\s+");
+        System.out.println(info.name + "." + methodName + ": " + info.methodOffset);
 
-            if(parts.length == 2){
-
-                String localType = parts[0];
-                String localName = parts[1];
-
-                int size = typeSizes.getOrDefault(localType, 8);
-
-                if(paramNames.contains(localName)){
-                    throw new Exception(
-                        "Local: " + localName +
-                        " already exists in parameters of " + methodInfo.name
-                    );
-                }
-
-                if(methodInfo.locals.containsKey(localName)){
-                    throw new Exception(
-                        "Duplicate local: " + localName +
-                        " already exists in method " + methodInfo.name
-                    );
-                }
-
-                Variable localVar = new Variable(localName, localType, size);
-
-                methodInfo.locals.put(localVar.name, localVar);
-            }
-        }
-
-
-        // Check if method can be overriden.
-        Method inherited = findMethodParent(info, methodInfo);
-
-        if(inherited != null){
-
-            if(!inherited.returnType.equals(type)){
-                throw new Exception("Invalid override for method RETURN TYPE " + methodInfo.name);
-            }
-
-            if(inherited.params.size() != methodInfo.params.size()){ 
-                throw new Exception("Invalid override for method PARAMS SIZE " + name);
-            }
-
-            for(int i=0; i<inherited.params.size(); i++){
-
-                String p1 = inherited.params.get(i).type;
-                String p2 = methodInfo.params.get(i).type;
-
-                if(!p1.equals(p2)){
-                    throw new Exception("Invalid override for method PARAM TYPE DIFF " + name);
-                }
-            }
-            
-        }
-             
-        System.out.println(classname + "." + methodInfo.name + ": " + offset);
-
-        info.methodOffset += methodSize;
-        info.methods.computeIfAbsent(name, k -> new ArrayList<>()).add(methodInfo);
-
-
-
-        // super.visit(n, argu);
+        info.methodOffset += 8;
         return null;
     }
 

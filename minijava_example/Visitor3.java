@@ -40,7 +40,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
         }
 
         if(argu == null){
-            System.out.println(name);
+            // System.out.println(name);
 
             return name;
         }
@@ -298,10 +298,10 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
         String exprType = getType(expr, argu);
 
-        // System.out.println(varType + " " + exprType);
+        // System.out.println(argu.currentClass.name + " " + argu.currentMethod.name + " " + var + " " + varType);
 
         if(!isSubType(exprType, varType)){
-            throw new Exception("Bad assigment of " + exprType + " to " + varType);
+            throw new Exception("Bad assignment of " + exprType + " to " + varType);
         }
 
         return exprType;
@@ -370,6 +370,8 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
             throw new Exception("If statement needs boolean as expression instead got " + exprType);
         }
 
+        String ifStatement = n.f4.accept(this, argu);
+        String elseStatement = n.f6.accept(this, argu);
 
        return null;
     }
@@ -437,48 +439,37 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
     @Override
     public String visit(MethodDeclaration n, CurrentInfo info) throws Exception {
 
+
+        String type = n.f1.accept(this, info);
         String name = n.f2.accept(this, info);
 
         ArrayList<Method> list = info.currentClass.methods.get(name);
 
-        Boolean illegal = true;
-
-        Method m = null;
-
-        String exp;
-        String expType = null;
-        
+        Method matched = null;
 
         for(Method candidate : list){
 
+            // System.out.println(info.currentClass.name + " " + candidate.returnType + " " + candidate.name + " " + candidate.returnType);
+
             info.currentMethod = candidate;
 
-            exp = n.f10.accept(this, info);
+            // validate statements under THIS candidate scope
+            n.f8.accept(this, info);
 
-            expType = getType(exp, info);
+            String retExpr = n.f10.accept(this, info);
+            String retType = getType(retExpr, info);
 
-
-            if(!expType.equals(candidate.returnType)){
-                continue;
+            if(retType.equals(candidate.returnType)){
+                matched = candidate;
+                break;
             }
-            else{
-
-                illegal = false;
-
-                m = candidate;
-            }
-
         }
 
-        info.currentMethod = m;
-    
-        String statement = n.f8.accept(this, info);
-
-        
-        if(illegal){
-            throw new Exception("Method " + info.currentMethod.name + " returns " + expType + " instead of " + info.currentMethod.returnType);
+        if(matched == null){
+            throw new Exception("No valid overload for method " + name);
         }
-        // super.visit(n, argu);
+
+        info.currentMethod = matched;
 
         return null;
     }
@@ -674,7 +665,7 @@ class Visitor3 extends GJDepthFirst<String, CurrentInfo>{
 
                 ArrayList<Method> candidates = info.methods.get(methodCalled);
 
-                System.out.println(info.methods.containsKey(methodCalled));
+                // System.out.println(info.methods.containsKey(methodCalled));
 
                 if(candidates != null){
                     for(Method m : candidates){

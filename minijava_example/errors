@@ -1,0 +1,496 @@
+Running Main with ../minijava-examples-new/minijava-error-extra/BadAssign.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: A
+Class: A
+Variables: 
+Methods: 
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Bad assignment of int to A
+	at Visitor3.visit(Visitor3.java:304)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.AssignmentStatement.accept(AssignmentStatement.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:219)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MainClass.accept(MainClass.java:94)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:77)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/BadAssign2.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: A
+Class: B
+Class: A
+Variables: 
+Methods: 
+
+Class: B
+Variables: 
+Methods: 
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Bad assignment of A to B
+	at Visitor3.visit(Visitor3.java:304)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.AssignmentStatement.accept(AssignmentStatement.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:219)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MainClass.accept(MainClass.java:94)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:77)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/Classes-error.java
+FAIL: error file succeeded unexpectedly
+--- STDOUT ---
+Class: Base
+Class: Derived
+Class: Base
+Variables: 
+Base.data: 0
+Methods: 
+Base.get: 0
+
+Class: Derived
+Variables: 
+Methods: 
+Derived.get: 8
+
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/DoubleDeclaration1.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: A
+Class: A
+Variables: 
+Methods: 
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+Exception in thread "main" java.lang.Exception: Local variable 'x' already defined as parameter
+	at Visitor2.visit(Visitor2.java:493)
+	at Visitor2.visit(Visitor2.java:11)
+	at syntaxtree.MethodDeclaration.accept(MethodDeclaration.java:74)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor2.visit(Visitor2.java:297)
+	at Visitor2.visit(Visitor2.java:11)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:32)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/DoubleDeclaration4.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: A
+Class: B
+Class: A
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+Exception in thread "main" java.lang.Exception: Duplicate class: A
+	at MyVisitor.visit(MyVisitor.java:92)
+	at MyVisitor.visit(MyVisitor.java:9)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:36)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:27)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/DoubleDeclaration6.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: A
+Class: A
+Variables: 
+Methods: 
+A.foo: 0
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+Exception in thread "main" java.lang.Exception: Illegal overload for method foo
+	at Visitor2.visit(Visitor2.java:548)
+	at Visitor2.visit(Visitor2.java:11)
+	at syntaxtree.MethodDeclaration.accept(MethodDeclaration.java:74)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:36)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor2.visit(Visitor2.java:297)
+	at Visitor2.visit(Visitor2.java:11)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:32)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/NoMatchingMethod.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: A
+Class: B
+Class: A
+Variables: 
+Methods: 
+A.foo: 0
+
+Class: B
+Variables: 
+Methods: 
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Method foo does not exist in class A or params not match
+	at Visitor3.visit(Visitor3.java:694)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MessageSend.accept(MessageSend.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:427)
+	at syntaxtree.Expression.accept(Expression.java:30)
+	at Visitor3.visit(Visitor3.java:297)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.AssignmentStatement.accept(AssignmentStatement.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:36)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:219)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MainClass.accept(MainClass.java:94)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:77)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/NoMethod.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: A
+Class: A
+Variables: 
+Methods: 
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Method foo does not exist in class A or params not match
+	at Visitor3.visit(Visitor3.java:694)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MessageSend.accept(MessageSend.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:427)
+	at syntaxtree.Expression.accept(Expression.java:30)
+	at Visitor3.visit(Visitor3.java:297)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.AssignmentStatement.accept(AssignmentStatement.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:36)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:219)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MainClass.accept(MainClass.java:94)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:77)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/Overload1.java
+FAIL: error file succeeded unexpectedly
+--- STDOUT ---
+Class: A
+Class: A
+Variables: 
+Methods: 
+A.foo: 0
+A.foo: 16
+
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/UseArgs.java
+PASS: error file failed as expected
+--- STDOUT ---
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Variable String[] is not declared
+	at Visitor3.getType(Visitor3.java:74)
+	at Visitor3.visit(Visitor3.java:299)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.AssignmentStatement.accept(AssignmentStatement.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:219)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MainClass.accept(MainClass.java:94)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:77)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/test18.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: Test
+Class: Test
+Variables: 
+Methods: 
+Test.start: 0
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Operator [] needs type of int[] and int. Instead got int and int
+	at Visitor3.visit(Visitor3.java:603)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.ArrayLookup.accept(ArrayLookup.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:427)
+	at syntaxtree.Expression.accept(Expression.java:30)
+	at Visitor3.visit(Visitor3.java:297)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.AssignmentStatement.accept(AssignmentStatement.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:457)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MethodDeclaration.accept(MethodDeclaration.java:74)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:243)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/test21.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: Test
+Class: Test
+Variables: 
+Methods: 
+Test.start: 0
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Bad array lookup of boolean instead of int
+	at Visitor3.visit(Visitor3.java:339)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.ArrayAssignmentStatement.accept(ArrayAssignmentStatement.java:50)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:36)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:457)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MethodDeclaration.accept(MethodDeclaration.java:74)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:243)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/test35.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: Test
+Class: Test
+Variables: 
+Test.test: 0
+Methods: 
+Test.start: 0
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Print statement needs int as expression instead got Test
+	at Visitor3.visit(Visitor3.java:414)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.PrintStatement.accept(PrintStatement.java:42)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:457)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MethodDeclaration.accept(MethodDeclaration.java:74)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:243)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/test52.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: Test
+Class: Test
+Variables: 
+Test.op: 0
+Test.result: 4
+Methods: 
+Test.start: 0
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: Bad assignment of int to boolean
+	at Visitor3.visit(Visitor3.java:304)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.AssignmentStatement.accept(AssignmentStatement.java:38)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:308)
+	at syntaxtree.Statement.accept(Statement.java:27)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:457)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MethodDeclaration.accept(MethodDeclaration.java:74)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:243)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:32)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
+Running Main with ../minijava-examples-new/minijava-error-extra/test68.java
+PASS: error file failed as expected
+--- STDOUT ---
+Class: Test2
+Class: Test
+Class: Test2
+Variables: 
+Methods: 
+Test2.start: 0
+
+Class: Test
+Variables: 
+Test.test: 0
+Test.i: 8
+Methods: 
+Test.start: 0
+Test.next: 8
+
+
+--- STDERR ---
+Program parsed successfully.
+------Visitor 1-----
+------Visitor 2-----
+------Visitor 3-----
+Exception in thread "main" java.lang.Exception: No valid overload for method next
+	at Visitor3.visit(Visitor3.java:469)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.MethodDeclaration.accept(MethodDeclaration.java:74)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:36)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at Visitor3.visit(Visitor3.java:243)
+	at Visitor3.visit(Visitor3.java:7)
+	at syntaxtree.ClassDeclaration.accept(ClassDeclaration.java:46)
+	at syntaxtree.NodeChoice.accept(NodeChoice.java:24)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:131)
+	at syntaxtree.TypeDeclaration.accept(TypeDeclaration.java:23)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:36)
+	at syntaxtree.NodeListOptional.accept(NodeListOptional.java:34)
+	at visitor.GJDepthFirst.visit(GJDepthFirst.java:78)
+	at syntaxtree.Goal.accept(Goal.java:34)
+	at Main.main(Main.java:36)
+-------------------
